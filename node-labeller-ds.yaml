@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kubectl-labeller-sa
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubectl-labeller-role
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["patch", "get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kubectl-labeller-rbac
+subjects:
+- kind: ServiceAccount
+  name: kubectl-labeller-sa
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: kubectl-labeller-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-labeller
+  labels:
+    k8s-app: node-labeller
+spec:
+  selector:
+    matchLabels:
+      name: node-labeller
+  template:
+    metadata:
+      labels:
+        name: node-labeller
+    spec:
+      serviceAccountName: kubectl-labeller-sa
+      containers:
+      - name: kubectl
+        image: bitnami/kubectl
+        command: [ "/bin/bash", "-c", "--" ]
+        args: ["kubectl label nodes $NODE_NAME key=value; sleep infinity"]
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
