@@ -1,5 +1,5 @@
 # K8S Node Labeller
-This repo provides an example of how a k8s node can be labelled automatically using a daemonset (applied via gitops)
+This repo provides an example of how a k8s node can be labelled automatically using a daemonset (inc. custom SA with the require permissions):
 
 This can be applied using kubectl:
 
